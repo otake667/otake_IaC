@@ -1,0 +1,5 @@
+---
+- name: appacheのインストール
+  yum:
+    name: httpd
+    state: installed

@@ -1,0 +1,149 @@
+  - hosts: "{{ hostname }}"
+    gather_facts: no	
+
+    tasks:
+
+
+##　１.JDKダウンロードとパス通す
+
+    - name: corretoダウンロード
+      get_url:
+        url: https://corretto.aws/downloads/latest/amazon-corretto-8-x64-linux-jdk.tar.gz
+        dest: /opt/
+
+
+    - name: correto解凍
+      unarchive: 
+        src: /opt/amazon-corretto-8.382.05.1-linux-x64.tar.gz
+        dest: /opt
+        remote_src: yes
+
+
+    - name: パスを通す
+      lineinfile:
+        path: /root/.bash_profile
+        regexp: 'PATH=$PATH:\$HOME/bin'
+        line: 'PATH=$PATH:$HOME/bin:/opt/amazon-corretto-8.382.05.1-linux-x64/bin'
+        state: present
+
+
+    - name: パス設定変更の反映
+      shell: source /root/.bash_profile
+
+
+##　２.tomcatダウンロード
+
+
+    - name: tomcat.tarダウンロード
+      get_url:
+        url: https://dlcdn.apache.org/tomcat/tomcat-9/v9.0.78/bin/apache-tomcat-9.0.78.tar.gz 
+        dest: /usr/local/
+    
+
+    - name: tomcat解凍
+      unarchive:
+        src: /usr/local/apache-tomcat-9.0.78.tar.gz
+        dest: /usr/local/
+        remote_src: yes
+
+
+    - name: tomcatグループ作成
+      group:
+        name: tomcat
+
+
+    - name: tomcatユーザー追加
+      user:
+        name: tomcat
+        uid: 8080
+        group: tomcat
+        shell: /sbin/nologin
+
+    - name: tomcat所有者変更
+      file:
+        path: /usr/local/apache-tomcat-9.0.78
+        owner: tomcat 
+        group: tomcat
+        state: directory
+        recurse: yes
+
+
+    - name: tomcatシンボリックリンク作成
+      file:
+        src: /usr/local/apache-tomcat-9.0.78
+        path: /usr/local/tomcat
+        state: link
+        remote_src: yes
+
+
+## 　3.Tomcat初期設定
+
+
+    - name: setenv.sh作成
+      file:
+        path: /usr/local/tomcat/bin/setenv.sh
+        state: touch
+    
+
+    - name: setenv.shの内容記載
+      lineinfile:
+        dest: /usr/local/tomcat/bin/setenv.sh
+        line: "{{ item }}"
+      with_items:
+        - '#!/bin/sh'
+        - 'CATALINA_HOME=/usr/local/tomcat'
+        - 'JAVA_HOME=/opt/amazon-corretto-8.382.05.1-linux-x64'
+        - 'JAVA_OPTS="-Xms128m -Xmx512m"'
+
+
+    - name: serverv.xmlの書き換え
+      lineinfile:
+        path: /usr/local/tomcat/conf/server.xml
+        regexp: 'unpackWARs="true" autoDeploy="true">'
+        line: 'unpackWARs="false" autoDeploy="false">'
+        state: present
+
+
+    - name: tomcat.service作成
+      file:
+        path: /etc/systemd/system/tomcat.service
+        state: touch
+
+    - name: Tomcat起動スクリプトの作成
+      lineinfile:
+        dest: /etc/systemd/system/tomcat.service
+        line: "{{ item }}"
+      with_items:
+        - '[Unit]'
+        - 'Description=Apache Tomcat9'
+        - 'After=network.target'
+        - " "
+        - " "
+        - '[Service]'
+        - 'User=tomcat'
+        - 'Group=tomcat'
+        - 'Type=oneshot'
+        - 'PIDFile=/usr/local/tomcat/tomcat.pid'
+        - 'RemainAfterExit=yes'
+        - " "
+        - " "
+        - 'ExecStart=/usr/local/tomcat/bin/startup.sh'
+        - 'ExecStop=/usr/local/tomcat/bin/shutdown.sh'
+        - 'ExecReStart=/usr/local/tomcat/bin/shutdown.sh;/usr/local/tomcat/bin/startup.sh'
+        - " "
+        - " "
+        - '[Install]'
+        - 'WantedBy=multi-user.target'
+
+
+    - name: デーモンリロード
+      command: systemctl daemon-reload
+      become: yes
+    
+
+    - name: tomcat起動
+      systemd:
+        name: tomcat
+        state: started
+        enabled: yes
+

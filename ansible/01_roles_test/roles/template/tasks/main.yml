@@ -1,0 +1,7 @@
+---
+
+- name: apache初期設定
+  template:
+    src: httpd.conf.j2
+    dest: /etc/httpd/conf/httpd.conf
+  notify: apache設定書き換え反映

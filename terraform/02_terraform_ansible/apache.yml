@@ -1,0 +1,22 @@
+---
+- hosts: web
+  remote_user: ec2-user
+  become: yes
+  gather_facts: false
+  tasks:
+  - name: waiting_standby_ssh
+    wait_for_connection:
+
+  - name: det_host_status
+    setup:
+
+  - name: Apache install
+    yum:
+      name: httpd
+      state: latest
+
+  - name: Apache boot
+    systemd:
+      name: httpd
+      state: started
+      enabled: true

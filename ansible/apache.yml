@@ -1,0 +1,24 @@
+---
+- hosts: "{{ hostname }}"
+  gather_facts: false
+
+  tasks:
+  - name: Apacheインストール
+    yum:
+      name: httpd
+      state: latest
+
+  - name: リバースプロキシ設定
+    lineinfile:
+      dest: /etc/httpd/conf/httpd.conf
+      line: "{{ item }}"
+    with_items:
+      - 'ProxyRequests Off'
+      - 'ProxyPass / http://localhost:8080/'
+      - 'ProxyPassReverse / http://localhost:8080/'
+
+  - name: Apache起動
+    systemd:
+      name: httpd
+      state: started
+      enabled: true
