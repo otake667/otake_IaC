@@ -1,0 +1,6 @@
+---
+- name: apache設定書き換え反映
+  service:
+    name: httpd
+    state: restarted
+    enabled: true

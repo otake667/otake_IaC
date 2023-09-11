@@ -1,0 +1,7 @@
+---
+
+- hosts: 172.31.47.100
+  gather_facts: false
+  roles:
+    - yum
+    - template

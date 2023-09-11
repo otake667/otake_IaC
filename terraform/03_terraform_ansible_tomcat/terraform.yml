@@ -1,0 +1,32 @@
+---
+- hosts: 127.0.0.1
+  connection: local
+
+  tasks:
+  - name: terraform apply
+    terraform:
+      force_init: true
+      project_path: "./"
+      state: present
+    register: result
+
+  - name: wait instance_status_ok
+    shell:
+      cmd: "aws ec2 wait instance-status-ok --instance-ids {{ result.outputs.ec2_id.value }}"
+
+  - name: get instance_status
+    shell:
+      cmd: "aws ec2 describe-instance-status --instance-ids {{ result.outputs.ec2_id.value }}"
+    register: result_instance_status
+
+  - name: making inventoryfile
+    shell:
+      cmd: "echo [web] >> hosts"
+
+  - name: making inventoryfile2
+    shell:
+      cmd: "echo {{ result.outputs.ec2_public_ip.value }} >> hosts"
+
+  - name: start playbook2
+    shell:
+      cmd: "ansible-playbook -i hosts tomcat.yml --private-key ~/.ssh/id_ed25519"
