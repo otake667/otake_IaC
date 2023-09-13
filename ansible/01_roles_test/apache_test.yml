@@ -1,6 +1,6 @@
 ---
 
-- hosts: 172.31.47.100
+- hosts: xxx.xx.xx.xx
   gather_facts: false
   roles:
     - yum
