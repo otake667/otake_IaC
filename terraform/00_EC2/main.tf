@@ -3,10 +3,10 @@ provider "aws" {
 }
 
 resource "aws_instance" "terraform_test" {
-    ami = "ami-07d6bd9a28134d3b3"
+    ami = "ami-xxxx"
     instance_type = "t2.micro"
-    subnet_id = "subnet-053b7bddd666f1476"
-    key_name = "learn"
+    subnet_id = "subnet-xxxx"
+    key_name = "xxxxx"
     count = 1
     tags = {
         Name = "terraform_test"
