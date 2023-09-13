@@ -17,7 +17,7 @@ resource "aws_instance" "terraform_ansible" {
       type        = "ssh"
       user        = "ec2-user"
       host        = aws_instance.terraform_ansible.public_ip
-      private_key = file("~/.ssh/id_ed25519")
+      private_key = file("~/.ssh/xxxxxx")
     }
     inline = [
       "sudo yum install -y python"
